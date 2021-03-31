@@ -1,0 +1,4 @@
+0 - normal ice-cream
+1 - empty ice-cream
+2 - half ice-cream
+3 - one and half ice-cream

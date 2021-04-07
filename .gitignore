@@ -3,6 +3,7 @@ __pycache__/
 docs/
 result/
 optical camera/
+optical/
 tests/
 *.jpg
 *.rar

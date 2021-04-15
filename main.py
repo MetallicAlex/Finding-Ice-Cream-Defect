@@ -10,3 +10,4 @@ if __name__ == '__main__':
     ice_cream_classifier.test()
     ice_cream_classifier.plot_accuracy()
     ice_cream_classifier.plot_accuracy_defect_normal()
+    ice_cream_classifier.plot_algorithm_processing_time()

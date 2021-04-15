@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from tqdm import tqdm
+import datetime
 
 
 class IceCreamClassifier:
@@ -32,6 +32,7 @@ class IceCreamClassifier:
             'defect': 0,
             'normal': 0
         }
+        self._algorithm_processing_times = []
 
     def connect_to_optical_camera(self, camera: str):
         self._optical_camera = cv2.VideoCapture(camera)
@@ -95,7 +96,9 @@ class IceCreamClassifier:
         ice_creams_correctly = []
         ice_cream_ratios = []
         for index, row in self._dataset.iterrows():
+            start = datetime.datetime.now()
             ice_cream_class, ratio = self.algorithm1(f"datasets/{row['image']}")
+            self._algorithm_processing_times.append((datetime.datetime.now() - start).total_seconds())
             ice_cream_classes.append(ice_cream_class)
             ice_cream_ratios.append(ratio)
             if ice_cream_class == row['class']:
@@ -112,6 +115,7 @@ class IceCreamClassifier:
         self._dataset['ratio (Blue/Red)'] = ice_cream_ratios
         print(self._correctly_classify_ice_cream)
         print(self._correctly_normal_defect_ice_cream)
+        print(np.average(self._algorithm_processing_times))
         self._dataset.to_csv('result.csv', sep=';')
 
     def plot_accuracy(self):
@@ -159,6 +163,15 @@ class IceCreamClassifier:
         plt.title('Точность обнаружения мороженного (Брак/Нормальное)')
         plt.show()
 
+    def plot_algorithm_processing_time(self):
+        figure, ax = plt.subplots(figsize=(16, 9))
+        ax.plot(np.arange(len(self._algorithm_processing_times)), self._algorithm_processing_times)
+        ax.set_xlim(0, len(self._algorithm_processing_times))
+        ax.grid(True)
+        plt.title(f'Скорость обработки изображения алгоритмом'
+                  f' (Средняя скорость - {np.average(self._algorithm_processing_times)})')
+        plt.show()
+
     def algorithm1(self, filename: str):
         frame = cv2.imread(filename)
         roi = frame[80:200]
@@ -194,20 +207,3 @@ class IceCreamClassifier:
         elif ratio < 0.3:
             ice_cream_class = 1
         return ice_cream_class, ratio
-        # cv2.putText(mask, f'Max area: {cv2.contourArea(max_contour)}', (0, 15),
-        #             fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL, fontScale=1,
-        #             color=(0, 255, 0), thickness=1)
-        # cv2.putText(mask, f'Red pixels:  {number_red_pixels}', (0, 30),
-        #             fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL, fontScale=1,
-        #             color=(0, 255, 0), thickness=1)
-        # cv2.putText(mask, f'Blue pixels: {number_blue_pixels}', (0, 45),
-        #             fontFace=cv2.FONT_HERSHEY_COMPLEX_SMALL, fontScale=1,
-        #             color=(0, 255, 0), thickness=1)
-        # cv2.drawContours(mask, contours, -1, (0, 255, 0), 1)
-        # output = np.zeros((120, 640, 3), dtype='uint8')
-        # output[0:120, 0:320] = roi
-        # output[0:120, 320:640] = mask
-        # cv2.imshow(filename, output)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # return '1'

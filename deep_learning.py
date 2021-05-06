@@ -47,11 +47,11 @@ if __name__ == '__main__':
     test_ratios = np.array(test_ratios)
 
     model = tf.keras.Sequential([
-        tf.keras.Input(1),
-        Dense(20, activation='relu'),
+        Dense(20, activation='relu', input_shape=(1, )),
         Dense(10, activation='relu'),
         Dense(4)
     ])
+    model.summary()
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])

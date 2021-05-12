@@ -1,4 +1,7 @@
 {
-  "normal": "",
+  "normal": {
+    "min": 0.85,
+    "max": 1.6
+  },
   "defect": ""
 }

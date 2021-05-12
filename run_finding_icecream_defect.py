@@ -1,8 +1,13 @@
+# python run_finding_icecream_defect.py -r roi.json -a parameters_algorithm.json -c '127.0.0.1' -u 'rtsp://Univer:Univer2021@194.158.204.222:554/Streaming/Channels/201'
+
 import cv2
 import numpy as np
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 import datetime
+import time
 from pathlib import Path
+import json
+import argparse
 
 
 def log(filename: str, text: str):
@@ -10,10 +15,12 @@ def log(filename: str, text: str):
         file.write(text)
 
 
-def finding_ice_cream(capture: cv2.VideoCapture, modbus_client: ModbusClient, address: int, unit: int):
+def finding_ice_cream(capture: cv2.VideoCapture, roi_lines: dict, parameters: dict,
+                      modbus_client: ModbusClient, address: int, unit: int):
+    start = time.time()
     ret, frame = capture.retrieve(capture.grab())
     if ret:
-        roi = frame[80:200]
+        roi = frame[roi_lines['lines1']['y']:roi_lines['lines2']['y']]
         image_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         # RED COLOR
         lower_range = np.array([0, 50, 50])
@@ -35,10 +42,10 @@ def finding_ice_cream(capture: cv2.VideoCapture, modbus_client: ModbusClient, ad
         mask = cv2.bitwise_and(roi, mask)
         # ICE-CREAM CLASSIFICATION
         ratio = number_blue_pixels / number_red_pixels
-        defect = is_ice_cream_defect(ratio)
+        defect = is_ice_cream_defect(ratio, parameters)
         save_frame(frame, 'frame')
         save_frame(mask, 'mask')
-        log('events.log', f'[{datetime.datetime.now()}] ice-cream defect is {defect}\n')
+        log('events.log', f'[{datetime.datetime.now()}][{time.time() - start}] ice-cream defect is {defect}\n')
         if defect:
             send_result_to_controller(modbus_client, address, 1, unit)
         else:
@@ -47,8 +54,8 @@ def finding_ice_cream(capture: cv2.VideoCapture, modbus_client: ModbusClient, ad
         log('errors.log', f'[{datetime.datetime.now()}] camera is not connected')
 
 
-def is_ice_cream_defect(ratio: float):
-    if 0.85 <= ratio < 1.6:
+def is_ice_cream_defect(ratio: float, parameters: dict):
+    if parameters['normal']['min'] <= ratio < parameters['normal']['max']:
         ice_cream_class = False
     else:
         ice_cream_class = True
@@ -71,9 +78,29 @@ def send_result_to_controller(modbus_client: ModbusClient, address: int, value: 
 
 
 if __name__ == '__main__':
-    url = str
-    cap = cv2.VideoCapture(url)
-    client = ModbusClient('127.0.0.1', port=5020)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-r", "--roi", required=True,
+                    help="path to roi.json")
+    ap.add_argument("-a", "--algorithm", required=True,
+                    help="path to algorithm.json")
+    ap.add_argument("-u", "--url", required=True,
+                    help="path to ip-camera")
+    ap.add_argument("-c", "--client", required=True,
+                    help="modbus client ip-address")
+    args = vars(ap.parse_args())
+    with open(args['roi']) as file:
+        lines = json.load(file, strict=False)
+    with open(args['algorithm']) as file:
+        algorithm = json.load(file, strict=False)
+    cap = cv2.VideoCapture(args['url'])
+    client = ModbusClient(args['client'], port=5020)
     client.connect()
     while True:
-        finding_ice_cream(cap, client, 0, 1)
+        finding_ice_cream(
+            capture=cap,
+            roi_lines=lines,
+            parameters=algorithm,
+            modbus_client=client,
+            address=0,
+            unit=1
+        )

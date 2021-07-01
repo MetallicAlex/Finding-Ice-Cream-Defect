@@ -1,4 +1,4 @@
-# python run_finding_icecream_defect.py -r roi.json -a parameters_algorithm.json -c '127.0.0.1' -u 'rtsp://Univer:Univer2021@194.158.204.222:554/Streaming/Channels/201'
+# python run_finding_icecream_defect.py -r roi.json -a parameters_algorithm.json -c 127.0.0.1 -u rtsp://Univer:Univer2021@194.158.204.222:554/Streaming/Channels/201
 
 import cv2
 import numpy as np
@@ -11,47 +11,45 @@ import argparse
 
 
 def log(filename: str, text: str):
-    with open(filename, 'w+') as file:
+    with open(filename, 'a+') as file:
         file.write(text)
 
 
-def finding_ice_cream(capture: cv2.VideoCapture, roi_lines: dict, parameters: dict,
+def finding_ice_cream(frame: np.array, roi_lines: dict, parameters: dict,
                       modbus_client: ModbusClient, address: int, unit: int):
     start = time.time()
-    ret, frame = capture.retrieve(capture.grab())
-    if ret:
-        roi = frame[roi_lines['lines1']['y']:roi_lines['lines2']['y']]
-        image_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        # RED COLOR
-        lower_range = np.array([0, 50, 50])
-        upper_range = np.array([10, 255, 255])
-        mask_red = cv2.inRange(image_hsv, lower_range, upper_range)
-        lower_range = np.array([170, 50, 50])
-        upper_range = np.array([180, 255, 255])
-        mask_red2 = cv2.inRange(image_hsv, lower_range, upper_range)
-        mask_red = cv2.bitwise_or(mask_red, mask_red2)
-        number_red_pixels = cv2.countNonZero(mask_red)
-        # BLUE COLOR
-        lower_range = np.array([110, 50, 50])
-        upper_range = np.array([130, 255, 255])
-        mask_blue = cv2.inRange(image_hsv, lower_range, upper_range)
-        number_blue_pixels = cv2.countNonZero(mask_blue)
-        # DETECT ICE-CREAM
-        mask = cv2.bitwise_or(mask_blue, mask_red)
-        mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-        mask = cv2.bitwise_and(roi, mask)
-        # ICE-CREAM CLASSIFICATION
-        ratio = number_blue_pixels / number_red_pixels
-        defect = is_ice_cream_defect(ratio, parameters)
-        save_frame(frame, 'frame')
-        save_frame(mask, 'mask')
-        log('events.log', f'[{datetime.datetime.now()}][{time.time() - start}] ice-cream defect is {defect}\n')
-        if defect:
-            send_result_to_controller(modbus_client, address, 1, unit)
-        else:
-            send_result_to_controller(modbus_client, address, 0, unit)
+    roi = frame[roi_lines['line1']['y']:roi_lines['line2']['y']]
+    image_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    # RED COLOR
+    lower_range = np.array([0, 50, 50])
+    upper_range = np.array([10, 255, 255])
+    mask_red = cv2.inRange(image_hsv, lower_range, upper_range)
+    lower_range = np.array([170, 50, 50])
+    upper_range = np.array([180, 255, 255])
+    mask_red2 = cv2.inRange(image_hsv, lower_range, upper_range)
+    mask_red = cv2.bitwise_or(mask_red, mask_red2)
+    number_red_pixels = cv2.countNonZero(mask_red)
+    # BLUE COLOR
+    lower_range = np.array([110, 50, 50])
+    upper_range = np.array([130, 255, 255])
+    mask_blue = cv2.inRange(image_hsv, lower_range, upper_range)
+    number_blue_pixels = cv2.countNonZero(mask_blue)
+    # DETECT ICE-CREAM
+    mask = cv2.bitwise_or(mask_blue, mask_red)
+    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+    mask = cv2.bitwise_and(roi, mask)
+    # ICE-CREAM CLASSIFICATION
+    if number_red_pixels == 0:
+        number_red_pixels = 1
+    ratio = number_blue_pixels / number_red_pixels
+    defect = is_ice_cream_defect(ratio, parameters)
+    save_frame(frame, 'frame')
+    save_frame(mask, 'mask')
+    log('events.log', f'[{datetime.datetime.now()}][{time.time() - start}] ice-cream defect is {defect}\n')
+    if defect:
+        send_result_to_controller(modbus_client, address, 1, unit)
     else:
-        log('errors.log', f'[{datetime.datetime.now()}] camera is not connected')
+        send_result_to_controller(modbus_client, address, 0, unit)
 
 
 def is_ice_cream_defect(ratio: float, parameters: dict):
@@ -92,15 +90,33 @@ if __name__ == '__main__':
         lines = json.load(file, strict=False)
     with open(args['algorithm']) as file:
         algorithm = json.load(file, strict=False)
+    print(args['url'])
     cap = cv2.VideoCapture(args['url'])
-    client = ModbusClient(args['client'], port=5020)
+    # cap = cv2.VideoCapture('rtsp://Univer:Univer2021@194.158.204.222:554/Streaming/Channels/201')
+    client = ModbusClient(args['client'], port=502)
     client.connect()
-    while True:
-        finding_ice_cream(
-            capture=cap,
-            roi_lines=lines,
-            parameters=algorithm,
-            modbus_client=client,
-            address=0,
-            unit=1
-        )
+    times = []
+    for _ in range(100):
+        time.sleep(0.2)
+        start = time.time()
+        ret, frame = cap.read()
+        print(ret)
+        if ret:
+            cv2.imshow('Frame', frame)
+            finding_ice_cream(
+                frame=frame,
+                roi_lines=lines,
+                parameters=algorithm,
+                modbus_client=client,
+                address=0,
+                unit=1
+            )
+        else:
+            log('errors.log', f'[{datetime.datetime.now()}] camera is not connected')
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        times.append((time.time() - start)*1000)
+        log('time.log', f'{time.time() - start}\n')
+    print(np.average(times))
+    cap.release()
+    cv2.destroyAllWindows()

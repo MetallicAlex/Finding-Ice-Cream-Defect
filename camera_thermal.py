@@ -11,7 +11,7 @@ if __name__ == '__main__':
             cv2.imshow('thermal', frame)
         else:
             cap.release()
-            cap = cv2.VideoCapture("rtsp://Univer:Univer2021@192.168.43.228:554/Streaming/Channels/201")
+            cap = cv2.VideoCapture("rtsp://Univer:Univer2021@194.158.204.222:554/Streaming/Channels/201")
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()

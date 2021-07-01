@@ -1,0 +1,12 @@
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\bin\Debug\ImagingSource.exe.config
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\bin\Debug\ImagingSource.exe
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\bin\Debug\ImagingSource.pdb
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\bin\Debug\TIS.Imaging.ICImagingControl35.dll
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.csprojAssemblyReference.cache
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.Properties.Resources.resources
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.csproj.GenerateResource.cache
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.csproj.CoreCompileInputs.cache
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.csproj.CopyComplete
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.exe
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.pdb
+D:\Work\Projects\LABS\Finding-Ice-Cream-Defect\ImagingSource\ImagingSource\obj\Debug\ImagingSource.Form1.resources

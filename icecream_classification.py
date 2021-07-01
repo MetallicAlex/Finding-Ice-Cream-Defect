@@ -71,11 +71,31 @@ class IceCreamClassifier:
                 self.disconnect_to_thermal_camera()
                 break
 
-    def show_histogram(self, filename: str):
+    def show_histogram_package(self, filename: str):
         image = cv2.imread(filename)
-        figure, axes = plt.subplots(1, 2, constrained_layout=True)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        figure, axes = plt.subplots(1, 2)
+        axes[0].imshow(image)
+        nb_bins = 256
+        count_r = np.zeros(nb_bins)
+        count_g = np.zeros(nb_bins)
+        count_b = np.zeros(nb_bins)
+        x = np.array(image)
+        x = x.transpose(2, 0, 1)
+        hist_r = np.histogram(x[0], bins=nb_bins, range=[0, 255])
+        hist_g = np.histogram(x[1], bins=nb_bins, range=[0, 255])
+        hist_b = np.histogram(x[2], bins=nb_bins, range=[0, 255])
+        count_r = hist_r[0]
+        count_g = hist_g[0]
+        count_b = hist_b[0]
+        bins = hist_r[1]
+        # axes[1].bar(bins[:-1], count_r, color='r', alpha=0.5)
+        # axes[1].bar(bins[:-1], count_g, color='g', alpha=0.5)
+        # axes[1].bar(bins[:-1], count_b, color='b', alpha=0.5)
+        axes[1].hist(x[0].ravel(), bins=256, color='red', alpha=0.5)
+        axes[1].hist(x[1].ravel(), bins=256, color='green', alpha=0.5)
+        axes[1].hist(x[2].ravel(), bins=256, color='blue', alpha=0.5)
         # plt.hist(image.ravel(), 256,)
-        plt.imshow(image)
         plt.show()
 
     def read_dataset(self, filename: str):
